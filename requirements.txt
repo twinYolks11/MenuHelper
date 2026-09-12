@@ -1,1 +1,6 @@
 # Menu Helper uses Python's standard library only.
+Produce items bought no more than 1 week before use
+- when entering the meal need a way to designate produce
+- line entries rather than textfield with checkbox?
+Script for deployment
+Move Sunday to beginning of week
