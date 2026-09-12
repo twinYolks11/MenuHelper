@@ -6,9 +6,13 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 
 
-APP_DIR = Path(__file__).resolve().parent
+APP_DIR = Path("/var/local/menuhelper")
 DB_PATH = APP_DIR / "menuhelper.db"
 
+try:
+	APP_DIR.mkdir(parents=True, exist_ok=True)
+except PermissionError:
+	pass
 
 class Database:
     def __init__(self, path):
