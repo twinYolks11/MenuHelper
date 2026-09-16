@@ -18,6 +18,10 @@ python main.py
 
 The app creates `menuhelper.db` on first launch. The database stores meals, ingredients, and calendar assignments in the project folder.
 
+## Linux CI
+
+The GitHub Actions workflow in `.github/workflows/linux-mint-check.yml` checks the app on Ubuntu 24.04, the base used by Linux Mint 22. It installs Tk/X11 dependencies, validates the SQLite layer, launches the GUI under Xvfb, builds a PyInstaller executable, and uploads the Linux build artifact.
+
 ## Use
 
 - Drag a meal from the left library onto any day in the calendar.
