@@ -1,6 +1,7 @@
 import calendar
 import sqlite3
 import tkinter as tk
+from datetime import date, timedelta
 from tkinter import messagebox, ttk
 
 from calendar_view import CalendarView
@@ -164,8 +165,8 @@ class MenuHelper(tk.Tk):
 
     def _show_shopping_list(self):
         year, month = self.calendar_view.year, self.calendar_view.month
-        calendar.setfirstweekday(calendar.MONDAY)
-        month_days = calendar.monthcalendar(year, month)
+        shopping_days = sorted(self.database.shopping_days_for_month(year, month))
+        last_day = date(year, month, calendar.monthrange(year, month)[1])
         popup = tk.Toplevel(self)
         popup.title("Shopping list")
         popup.geometry("500x650")
@@ -173,7 +174,7 @@ class MenuHelper(tk.Tk):
         popup.transient(self)
         tk.Label(popup, text="SHOPPING LISTS", bg=self.PANEL, fg=self.TERRACOTTA, font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=26, pady=(24, 3))
         tk.Label(popup, text=f"{calendar.month_name[month]} {year}", bg=self.PANEL, fg=self.INK, font=("Georgia", 21, "bold")).pack(anchor="w", padx=26)
-        tk.Label(popup, text="Monthly pantry items plus fresh produce by week", bg=self.PANEL, fg=self.MUTED, font=("Segoe UI", 9)).pack(anchor="w", padx=27, pady=(3, 12))
+        tk.Label(popup, text="Monthly pantry items plus fresh produce by shopping day", bg=self.PANEL, fg=self.MUTED, font=("Segoe UI", 9)).pack(anchor="w", padx=27, pady=(3, 12))
         canvas = tk.Canvas(popup, bg=self.PANEL, highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True, padx=(24, 0), pady=(0, 24))
         scrollbar = ttk.Scrollbar(popup, orient="vertical", command=canvas.yview)
@@ -182,12 +183,22 @@ class MenuHelper(tk.Tk):
         canvas.create_window((0, 0), window=list_frame, anchor="nw", width=435)
         list_frame.bind("<Configure>", lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
         self._render_shopping_section(list_frame, "Monthly pantry list", "All non-produce items for the month", self.database.shopping_list(year, month, False))
-        for week_number, week in enumerate(month_days, start=1):
-            days = [f"{year:04d}-{month:02d}-{day:02d}" for day in week if day]
-            first_day = next(day for day in week if day)
-            last_day = next(day for day in reversed(week) if day)
-            title = f"Week {week_number}  |  {calendar.month_abbr[month]} {first_day}-{last_day}"
-            self._render_shopping_section(list_frame, title, "Produce used this week", self.database.shopping_list(year, month, True, days))
+        if not shopping_days:
+            self._render_shopping_section(list_frame, "No shopping days selected", "Mark days as Shop on the calendar to create produce lists", [])
+            return
+        for index, shopping_day in enumerate(shopping_days):
+            start = date.fromisoformat(shopping_day)
+            if index + 1 < len(shopping_days):
+                end = date.fromisoformat(shopping_days[index + 1]) - timedelta(days=1)
+            else:
+                end = last_day
+            title = f"{start.strftime('%A, %B')} {start.day}"
+            if end != start:
+                subtitle = f"Produce used from {start.strftime('%b')} {start.day} through {end.strftime('%b')} {end.day}"
+            else:
+                subtitle = "Produce used on this day"
+            items = self.database.shopping_list_range(start.isoformat(), end.isoformat())
+            self._render_shopping_section(list_frame, title, subtitle, items)
 
     def _render_shopping_section(self, parent, title, subtitle, items):
         section = tk.Frame(parent, bg="#faf8f2", highlightbackground=self.LINE, highlightthickness=1)

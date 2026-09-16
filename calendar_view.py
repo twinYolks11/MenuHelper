@@ -57,6 +57,7 @@ class CalendarView(tk.Frame):
         pale_green = self.colors["PALE_GREEN"]
         self.month_button.configure(text=f"{calendar.month_name[self.month]} {self.year} v")
         assignments = self.database.assignments_for_month(self.year, self.month)
+        shopping_days = self.database.shopping_days_for_month(self.year, self.month)
         for child in self.calendar_grid.winfo_children():
             child.destroy()
         calendar.setfirstweekday(calendar.SUNDAY)
@@ -78,14 +79,30 @@ class CalendarView(tk.Frame):
                 cell = tk.Frame(self.calendar_grid, bg="#faf8f2", highlightbackground=self.colors["LINE"], highlightthickness=1, cursor="hand2")
                 cell.grid(row=week_index, column=column, sticky="nsew", padx=3, pady=3)
                 cell.day_key = day_key
+                day_header = tk.Frame(cell, bg="#faf8f2")
+                day_header.pack(fill="x", padx=6, pady=(5, 1))
                 tk.Label(
-                    cell,
+                    day_header,
                     text=str(day_number),
                     bg="#faf8f2",
                     fg=terracotta if column in (0, 6) else ink,
                     font=("Segoe UI", 10, "bold"),
                     anchor="w",
-                ).pack(fill="x", padx=8, pady=(7, 2))
+                ).pack(side="left", padx=2)
+                is_shopping_day = day_key in shopping_days
+                tk.Button(
+                    day_header,
+                    text="Shop" if is_shopping_day else "shop",
+                    command=lambda key=day_key, selected=is_shopping_day: self._toggle_shopping_day(key, selected),
+                    bg=pale_green if is_shopping_day else "#faf8f2",
+                    fg=self.colors["SAGE"] if is_shopping_day else "#a6aaa2",
+                    activebackground="#d5e1d2",
+                    relief="flat",
+                    borderwidth=0,
+                    font=("Segoe UI", 7, "bold"),
+                    cursor="hand2",
+                    padx=3,
+                ).pack(side="right", padx=1)
                 if assignment:
                     meal_row = tk.Frame(cell, bg=pale_green)
                     meal_row.pack(fill="x", padx=6, pady=(3, 6))
@@ -138,6 +155,10 @@ class CalendarView(tk.Frame):
 
     def _clear_day(self, day_key):
         self.database.clear_assignment(day_key)
+        self.render()
+
+    def _toggle_shopping_day(self, day_key, selected):
+        self.database.set_shopping_day(day_key, not selected)
         self.render()
 
     def _month_picker(self):

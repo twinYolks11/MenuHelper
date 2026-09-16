@@ -24,6 +24,7 @@ The app creates `menuhelper.db` on first launch. The database stores meals, ingr
 - Drop another meal on an occupied day to replace the existing meal.
 - Sunday is the first day shown in each calendar week.
 - Click the month title to choose another month and year.
-- Select **Generate List** to create a monthly pantry list and weekly produce lists for the visible month.
+- Mark any calendar day as a shopping day using its **shop** toggle. Toggle it again to unset the day.
+- Select **Generate List** to create a monthly pantry list and produce lists grouped by shopping day. Each produce list includes items from its shopping day through the day before the next shopping day.
 - Use **Add a meal** to add ingredients one at a time, entering each ingredient's amount and checking **Produce** when appropriate.
 - Use the `x` beside a meal to remove it from the library, or the `x` on a calendar assignment to clear only that day.

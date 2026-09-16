@@ -32,6 +32,9 @@ class Database:
                 amount TEXT NOT NULL,
                 produce INTEGER NOT NULL DEFAULT 0
             );
+            CREATE TABLE IF NOT EXISTS shopping_days (
+                day TEXT PRIMARY KEY
+            );
             """
         )
         self.connection.commit()
@@ -132,6 +135,22 @@ class Database:
         self.connection.execute("DELETE FROM assignments WHERE day = ?", (day_key,))
         self.connection.commit()
 
+    def shopping_days_for_month(self, year, month):
+        prefix = f"{year:04d}-{month:02d}-%"
+        rows = self.connection.execute(
+            "SELECT day FROM shopping_days WHERE day LIKE ? ORDER BY day", (prefix,)
+        ).fetchall()
+        return {row["day"] for row in rows}
+
+    def set_shopping_day(self, day_key, selected):
+        if selected:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO shopping_days(day) VALUES (?)", (day_key,)
+            )
+        else:
+            self.connection.execute("DELETE FROM shopping_days WHERE day = ?", (day_key,))
+        self.connection.commit()
+
     def shopping_list(self, year, month, produce, week_days=None):
         query = (
             "SELECT ingredients.name, ingredients.amount FROM assignments "
@@ -144,6 +163,25 @@ class Database:
             query += f" AND assignments.day IN ({placeholders})"
             parameters.extend(week_days)
         rows = self.connection.execute(query, parameters).fetchall()
+        totals = {}
+        for row in rows:
+            ingredient = row["name"].strip()
+            amount = row["amount"].strip()
+            if ingredient:
+                totals.setdefault(ingredient, []).append(amount)
+        return [(ingredient, " + ".join(amounts)) for ingredient, amounts in sorted(totals.items())]
+
+    def shopping_list_range(self, start_day, end_day, produce=True):
+        rows = self.connection.execute(
+            """
+            SELECT ingredients.name, ingredients.amount
+            FROM assignments
+            JOIN ingredients ON ingredients.meal_id = assignments.meal_id
+            WHERE assignments.day >= ? AND assignments.day <= ?
+              AND ingredients.produce = ?
+            """,
+            (start_day, end_day, int(produce)),
+        ).fetchall()
         totals = {}
         for row in rows:
             ingredient = row["name"].strip()
