@@ -22,6 +22,17 @@ The app creates `menuhelper.db` on first launch. The database stores meals, ingr
 
 The GitHub Actions workflow in `.github/workflows/linux-mint-check.yml` checks the app on Ubuntu 24.04, the base used by Linux Mint 22. It installs Tk/X11 dependencies, validates the SQLite layer, launches the GUI under Xvfb, builds a PyInstaller executable, and uploads the Linux build artifact.
 
+## Install on Linux Mint Cinnamon
+
+From the project directory on the Mint machine, run:
+
+```bash
+chmod +x deploy_linux.sh
+sudo ./deploy_linux.sh
+```
+
+The script builds a PyInstaller **onedir** package, installs it under `/opt/MenuHelper`, creates the system launcher `/usr/local/bin/menuhelper`, and adds Menu Helper to the Cinnamon application menu for all users. Each user gets a separate writable database at `~/.local/share/MenuHelper/menuhelper.db`.
+
 ## Use
 
 - Drag a meal from the left library onto any day in the calendar.

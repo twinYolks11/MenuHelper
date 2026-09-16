@@ -1,13 +1,25 @@
+import os
 import sqlite3
+import shutil
 from pathlib import Path
 
 
-APP_DIR = Path(__file__).resolve().parent
+if os.name == "nt":
+    DATA_ROOT = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+else:
+    DATA_ROOT = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+
+APP_DIR = DATA_ROOT / "MenuHelper"
 DB_PATH = APP_DIR / "menuhelper.db"
+LEGACY_DB_PATH = Path(__file__).resolve().parent / "menuhelper.db"
 
 
 class Database:
     def __init__(self, path=DB_PATH):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path == DB_PATH and not path.exists() and LEGACY_DB_PATH.exists():
+            shutil.copy2(LEGACY_DB_PATH, path)
         self.connection = sqlite3.connect(path)
         self.connection.row_factory = sqlite3.Row
         self._create_tables()
