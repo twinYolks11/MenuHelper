@@ -68,10 +68,10 @@ jobs:
 
       - name: Smoke test packaged executable under X11
         run: |
-          chmod 0755 dist/MenuHelper
-          test -x dist/MenuHelper
+          chmod 0755 dist/MenuHelper/MenuHelper
+          test -x dist/MenuHelper/MenuHelper
           set +e
-          timeout --signal=TERM 10s xvfb-run --auto-servernum ./dist/MenuHelper
+          timeout --signal=TERM 10s xvfb-run --auto-servernum ./dist/MenuHelper/MenuHelper
           status=$?
           set -e
           test "$status" -eq 124
